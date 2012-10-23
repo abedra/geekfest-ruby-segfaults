@@ -1,0 +1,229 @@
+* Code for ruby segfault geekfest
+  #+begin_src c
+    #include <stdio.h>
+
+    int main(void) {
+      printf("Hello World");
+      return 0;
+    }
+  #+end_src
+
+  #+begin_src sh
+    $ gcc -g -o hello hello.c
+    $ gdb hello
+
+    (gdb) run
+    Starting program: /Users/abedra/Desktop/hello
+    Reading symbols for shared libraries +........................ done
+    Hello World
+    Program exited normally.
+    (gdb) disas main
+  #+end_src
+
+  #+begin_src asm
+    0x0000000100000ef0 <main+0>:    push   %rbp
+    0x0000000100000ef1 <main+1>:    mov    %rsp,%rbp
+    0x0000000100000ef4 <main+4>:    sub    $0x10,%rsp
+    0x0000000100000ef8 <main+8>:    xor    %al,%al
+    0x0000000100000efa <main+10>:   lea    0x4f(%rip),%rcx        # 0x100000f50
+    0x0000000100000f01 <main+17>:   mov    %rcx,%rdi
+    0x0000000100000f04 <main+20>:   callq  0x100000f26 <dyld_stub_printf>
+    0x0000000100000f09 <main+25>:   movl   $0x0,-0x8(%rbp)
+    0x0000000100000f10 <main+32>:   mov    -0x8(%rbp),%eax
+    0x0000000100000f13 <main+35>:   mov    %eax,-0x4(%rbp)
+    0x0000000100000f16 <main+38>:   mov    -0x4(%rbp),%eax
+    0x0000000100000f19 <main+41>:   add    $0x10,%rsp
+    0x0000000100000f1d <main+45>:   pop    %rbp
+    0x0000000100000f1e <main+46>:   retq
+  #+end_src
+
+  #+begin_src c
+    #include <stdio.h>
+
+    int main(void) {
+      int *ptr = NULL;
+      *ptr = 1;
+    }
+  #+end_src
+
+  #+begin_src sh
+    $ gcc -g -o segfault segfault.c
+    $ ./segfault
+    zsh: segmentation fault  ./segfault
+  #+end_src
+
+  #+begin_src fundamental
+    gdb segfault
+    (gdb) run
+    Starting program: /Users/abedra/Desktop/segfault
+    Reading symbols for shared libraries +........................ done
+
+    Program received signal EXC_BAD_ACCESS, Could not access memory.
+    Reason: KERN_INVALID_ADDRESS at address: 0x0000000000000000
+    0x0000000100000f30 in main () at segfault.c:5
+    5         *ptr = 1;
+    (gdb) bt
+    #0  0x0000000100000f30 in main () at segfault.c:5
+  #+end_src
+
+  #+begin_src asm
+    0x0000000100000f20 <main+0>:    push   %rbp
+    0x0000000100000f21 <main+1>:    mov    %rsp,%rbp
+    0x0000000100000f24 <main+4>:    movq   $0x0,-0x10(%rbp)
+    0x0000000100000f2c <main+12>:   mov    -0x10(%rbp),%rax
+    0x0000000100000f30 <main+16>:   movl   $0x1,(%rax)
+    0x0000000100000f36 <main+22>:   mov    -0x4(%rbp),%eax
+    0x0000000100000f39 <main+25>:   pop    %rbp
+    0x0000000100000f3a <main+26>:   retq
+  #+end_src
+
+  #+begin_src sh
+    $ ulimit -c unlimited
+  #+end_src
+
+  #+begin_src c
+    #include <ruby/ruby.h>
+
+    VALUE crash(self)
+    {
+      int *ptr = NULL;
+      *ptr = 1;
+    }
+
+    void Init_example(void)
+    {
+      VALUE klass = rb_define_class("Example", rb_cObject);
+      rb_define_singleton_method(klass, "crash", crash, 0);
+    }
+  #+end_src
+
+  #+begin_src ruby
+    #!/usr/bin/env ruby
+
+    require 'example'
+
+    Example.crash
+  #+end_src
+
+  #+begin_src sh
+    $ example
+    /Users/abedra/.rvm/gems/ree-1.8.7-2012.02/gems/example-0.0.1/bin/example:5: [BUG] Segmentation fault
+    ruby 1.8.7 (2012-02-08 MBARI 8/0x6770 on patchlevel 358) [i686-darwin11.4.2], MBARI 0x6770, Ruby Enterprise Edition 2012.02
+
+    zsh: abort      example
+  #+end_src
+
+  #+begin_src sh
+    $ gdb --args ruby -S example
+
+    (gdb) run
+    Starting program: /Users/abedra/.rvm/rubies/ree-1.8.7-2012.02/bin/ruby -S example
+    Reading symbols for shared libraries .++............................ done
+    Reading symbols for shared libraries . done
+
+    Program received signal EXC_BAD_ACCESS, Could not access memory.
+    Reason: KERN_INVALID_ADDRESS at address: 0x0000000000000000
+    crash (self=35554624) at example.c:6
+    6         *ptr = 1;
+  #+end_src
+
+  #+begin_src fundamental
+    (gdb) bt
+    #0  crash (self=35554624) at example.c:6
+    #1  0x0000000100023fd4 in rb_call0 (klass=4330521880, recv=4330521920, id=15873, oid=15873, argc=0, argv=0x0, body=0x1021e84f0, flags=<value temporarily unavailable, due to optimizations>) at eval.c:6035
+    #2  0x000000010002430c in rb_call (klass=4330521880, recv=4330521920, mid=15873, argc=0, argv=0x0, scope=0, self=4331734280) at eval.c:6283
+    #3  0x000000010002e4eb in eval_call (self=4331734280, node=0x1021e8d88) at eval.c:3371
+    #4  0x0000000100030d44 in rb_load (fname=4330524880, wrap=<value temporarily unavailable, due to optimizations>) at eval.c:7175
+    #5  0x00000001000313f5 in rb_f_load (argc=<value temporarily unavailable, due to optimizations>, argv=<value temporarily unavailable, due to optimizations>) at eval.c:7243
+    #6  0x0000000100023fd4 in rb_call0 (klass=4331744160, recv=4331734280, id=9801, oid=9801, argc=1, argv=0x7fff5fbfef90, body=0x1022f36d8, flags=<value temporarily unavailable, due to optimizations>) at eval.c:6035
+    #7  0x000000010002430c in rb_call (klass=4331744160, recv=4331734280, mid=9801, argc=1, argv=0x7fff5fbfef90, scope=1, self=4331734280) at eval.c:6283
+    #8  0x000000010002e22a in eval_fcall (self=4331734280, node=0x1022eeb60) at eval.c:3385
+    #9  0x000000010003255b in ruby_exec_internal () at eval.c:1678
+    #10 0x0000000100032598 in ruby_exec () at eval.c:1698
+    #11 0x00000001000325c0 in ruby_run () at eval.c:1708
+    #12 0x0000000100001104 in main (argc=<value temporarily unavailable, due to optimizations>, argv=<value temporarily unavailable, due to optimizations>, envp=<value temporarily unavailable, due to optimizations>) at main.c:48
+  #+end_src
+
+  #+begin_src sh
+    export optflags="-O0 -ggdb3"; rvm install ree
+  #+end_src
+
+  #+begin_src fundamental
+    (gdb) bt
+    #0  crash (self=35554624) at example.c:6
+    #1  0x000000010002abe8 in call_cfunc (func=0x1001b2ea0 <crash>, recv=4330521920, len=0, argc=0, argv=0x0) at eval.c:5888
+    #2  0x0000000100029de8 in rb_call0 (klass=4330521880, recv=4330521920, id=15873, oid=15873, argc=0, argv=0x0, body=0x1021e84f0, flags=0) at eval.c:6035
+    #3  0x000000010002b6da in rb_call (klass=4330521880, recv=4330521920, mid=15873, argc=0, argv=0x0, scope=0, self=4331734280) at eval.c:6283
+    #4  0x0000000100022732 in eval_call (self=4331734280, node=0x1021e8d88) at eval.c:3371
+    #5  0x0000000100024d17 in rb_eval (self=4331734280, node=0x1021e8d88) at eval.c:4038
+    #6  0x000000010001d88f in eval_tree (self=4331734280, node=0x1021e8d38) at eval.c:1472
+    #7  0x000000010002da7f in rb_load (fname=4330524880, wrap=0) at eval.c:7175
+    #8  0x000000010002ddc3 in rb_f_load (argc=1, argv=0x7fff5fbfecc0) at eval.c:7243
+    #9  0x000000010002abd0 in call_cfunc (func=0x10002dd77 <rb_f_load>, recv=4331734280, len=-1, argc=1, argv=0x7fff5fbfecc0) at eval.c:5885
+    #10 0x0000000100029de8 in rb_call0 (klass=4331744160, recv=4331734280, id=9801, oid=9801, argc=1, argv=0x7fff5fbfecc0, body=0x1022f36d8, flags=2) at eval.c:6035
+    #11 0x000000010002b6da in rb_call (klass=4331744160, recv=4331734280, mid=9801, argc=1, argv=0x7fff5fbfecc0, scope=1, self=4331734280) at eval.c:6283
+    #12 0x0000000100022a0f in eval_fcall (self=4331734280, node=0x1022eeb60) at eval.c:3385
+    #13 0x0000000100024d2d in rb_eval (self=4331734280, node=0x1022eeb60) at eval.c:4042
+    #14 0x000000010001d88f in eval_tree (self=4331734280, node=0x1022ef380) at eval.c:1472
+    #15 0x000000010001dfbe in ruby_exec_internal () at eval.c:1678
+    #16 0x000000010001e00e in ruby_exec () at eval.c:1698
+    #17 0x000000010001e034 in ruby_run () at eval.c:1708
+    #18 0x0000000100000e42 in main (argc=Could not find the frame base for "main".) at main.c:48
+  #+end_src
+
+  #+begin_src asm
+    (gdb) disas crash
+    Dump of assembler code for function crash:
+    0x00000001001b2ea0 <crash+0>:   push   %rbp
+    0x00000001001b2ea1 <crash+1>:   mov    %rsp,%rbp
+    0x00000001001b2ea4 <crash+4>:   movl   $0x1,0x0
+    0x00000001001b2eaf <crash+15>:  leaveq
+    0x00000001001b2eb0 <crash+16>:  retq
+  #+end_src
+
+  #+begin_src fundamental
+    (gdb) info frame
+    Stack level 0, frame at 0x7fff5fbfe030:
+     rip = 0x1001b2ea4 in crash (example.c:6); saved rip 0x10002abe8
+     called by frame at 0x7fff5fbfe120
+     source language c.
+     Arglist at 0x7fff5fbfe028, args: self=35554664
+     Locals at 0x7fff5fbfe028, Previous frame's sp is 0x7fff5fbfe030
+     Saved registers:
+      rbp at 0x7fff5fbfe020, rip at 0x7fff5fbfe028
+    (gdb) info symbol 0x1001b2ea4
+    crash + 4 in section LC_SEGMENT.__TEXT.__text of /Users/abedra/.rvm/gems/ree-1.8.7-2012.02/gems/example-0.0.1/lib/example/example.bundle
+  #+end_src
+
+  #+begin_src fundamental
+    $ example
+    /Users/abedra/.rvm/gems/ree-1.8.7-2012.02/gems/example-0.0.1/bin/example:5: [BUG] Segmentation fault
+    ruby 1.8.7 (2012-02-08 MBARI 8/0x6770 on patchlevel 358) [i686-darwin11.4.2], MBARI 0x6770, Ruby Enterprise Edition 2012.02
+
+    zsh: abort (core dumped)  example
+    $ gdb ruby /cores/core.68415
+
+    Reading symbols for shared libraries . done
+    Reading symbols for shared libraries ..................................... done
+    #0  0x00007fff92eeb82a in __kill ()
+  #+end_src
+
+  #+begin_src fundamental
+    (gdb) bt
+    #0  0x00007fff92eeb82a in __kill ()
+    #1  0x00007fff91ea4a9c in abort ()
+    #2  0x000000010e8a9161 in rb_bug (fmt=Could not find the frame base for "rb_bug".
+    ) at error.c:213
+    #3  0x000000010e935a9a in sigsegv (sig=Could not find the frame base for "sigsegv".
+    ) at signal.c:632
+    #4  <signal handler called>
+    #5  crash (self=262069744) at example.c:6
+
+    .....
+  #+end_src
+
+  #+begin_src fundamental
+    (gdb) frame 5
+    #5  crash (self=262069744) at example.c:6
+    6         *ptr = 1;
+  #+end_src

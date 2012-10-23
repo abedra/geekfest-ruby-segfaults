@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>segfaults</title>
+<meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
+<meta name="title" content="segfaults"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2012-10-23 10:26:01 CDT"/>
+<meta name="author" content="Aaron Bedra"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #add8e6; font-weight:normal }
+  .target { }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
+  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
+  .center {margin-left:auto; margin-right:auto; text-align:center;}
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top;  }
+  th.right  { text-align:center;  }
+  th.left   { text-align:center;   }
+  th.center { text-align:center; }
+  td.right  { text-align:right;  }
+  td.left   { text-align:left;   }
+  td.center { text-align:center; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
+  textarea { overflow-x: auto; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+
+</head>
+<body>
+
+<div id="preamble">
+
+</div>
+
+<div id="content">
+<h1 class="title">segfaults</h1>
+
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1 Code for ruby segfault geekfest</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Code for ruby segfault geekfest</h2>
+<div class="outline-text-2" id="text-1">
+
+
+
+
+<pre class="src src-c"><span style="color: #483d8b;">#include</span> <span style="color: #8b2252;">&lt;stdio.h&gt;</span>
+
+<span style="color: #228b22;">int</span> <span style="color: #0000ff;">main</span>(<span style="color: #228b22;">void</span>) {
+  printf(<span style="color: #8b2252;">"Hello World"</span>);
+  <span style="color: #a020f0;">return</span> 0;
+}
+</pre>
+
+
+
+<pre class="src src-sh">$ gcc -g -o hello hello.c
+$ gdb hello
+
+(gdb) run
+Starting program: /Users/abedra/Desktop/hello
+Reading symbols for shared libraries +........................ done
+Hello World
+Program exited normally.
+(gdb) disas main
+</pre>
+
+
+
+<pre class="src src-asm"><span style="color: #0000ff;">0x0000000100000ef0</span> &lt;main+0&gt;:    push   <span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x0000000100000ef1</span> &lt;main+1&gt;:    mov    <span style="color: #a0522d;">%rsp</span>,<span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x0000000100000ef4</span> &lt;main+4&gt;:    sub    $0x10,<span style="color: #a0522d;">%rsp</span>
+<span style="color: #0000ff;">0x0000000100000ef8</span> &lt;main+8&gt;:    xor    <span style="color: #a0522d;">%al</span>,<span style="color: #a0522d;">%al</span>
+<span style="color: #0000ff;">0x0000000100000efa</span> &lt;main+10&gt;:   lea    0x4f(<span style="color: #a0522d;">%rip</span>),<span style="color: #a0522d;">%rcx</span>        # 0x100000f50
+<span style="color: #0000ff;">0x0000000100000f01</span> &lt;main+17&gt;:   mov    <span style="color: #a0522d;">%rcx</span>,<span style="color: #a0522d;">%rdi</span>
+<span style="color: #0000ff;">0x0000000100000f04</span> &lt;main+20&gt;:   callq  0x100000f26 &lt;dyld_stub_printf&gt;
+<span style="color: #0000ff;">0x0000000100000f09</span> &lt;main+25&gt;:   movl   $0x0,-0x8(<span style="color: #a0522d;">%rbp</span>)
+<span style="color: #0000ff;">0x0000000100000f10</span> &lt;main+32&gt;:   mov    -0x8(<span style="color: #a0522d;">%rbp</span>),<span style="color: #a0522d;">%eax</span>
+<span style="color: #0000ff;">0x0000000100000f13</span> &lt;main+35&gt;:   mov    <span style="color: #a0522d;">%eax</span>,-0x4(<span style="color: #a0522d;">%rbp</span>)
+<span style="color: #0000ff;">0x0000000100000f16</span> &lt;main+38&gt;:   mov    -0x4(<span style="color: #a0522d;">%rbp</span>),<span style="color: #a0522d;">%eax</span>
+<span style="color: #0000ff;">0x0000000100000f19</span> &lt;main+41&gt;:   add    $0x10,<span style="color: #a0522d;">%rsp</span>
+<span style="color: #0000ff;">0x0000000100000f1d</span> &lt;main+45&gt;:   pop    <span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x0000000100000f1e</span> &lt;main+46&gt;:   retq
+</pre>
+
+
+
+<pre class="src src-c"><span style="color: #483d8b;">#include</span> <span style="color: #8b2252;">&lt;stdio.h&gt;</span>
+
+<span style="color: #228b22;">int</span> <span style="color: #0000ff;">main</span>(<span style="color: #228b22;">void</span>) {
+  <span style="color: #228b22;">int</span> *<span style="color: #a0522d;">ptr</span> = <span style="color: #008b8b;">NULL</span>;
+  *ptr = 1;
+}
+</pre>
+
+
+
+<pre class="src src-sh">$ gcc -g -o segfault segfault.c
+$ ./segfault
+zsh: segmentation fault  ./segfault
+</pre>
+
+
+
+<pre class="src src-fundamental">gdb segfault
+(gdb) run
+Starting program: /Users/abedra/Desktop/segfault
+Reading symbols for shared libraries +........................ done
+
+Program received signal EXC_BAD_ACCESS, Could not access memory.
+Reason: KERN_INVALID_ADDRESS at address: 0x0000000000000000
+0x0000000100000f30 in main () at segfault.c:5
+5         *ptr = 1;
+(gdb) bt
+#0  0x0000000100000f30 in main () at segfault.c:5
+</pre>
+
+
+
+<pre class="src src-asm"><span style="color: #0000ff;">0x0000000100000f20</span> &lt;main+0&gt;:    push   <span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x0000000100000f21</span> &lt;main+1&gt;:    mov    <span style="color: #a0522d;">%rsp</span>,<span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x0000000100000f24</span> &lt;main+4&gt;:    movq   $0x0,-0x10(<span style="color: #a0522d;">%rbp</span>)
+<span style="color: #0000ff;">0x0000000100000f2c</span> &lt;main+12&gt;:   mov    -0x10(<span style="color: #a0522d;">%rbp</span>),<span style="color: #a0522d;">%rax</span>
+<span style="color: #0000ff;">0x0000000100000f30</span> &lt;main+16&gt;:   movl   $0x1,(<span style="color: #a0522d;">%rax</span>)
+<span style="color: #0000ff;">0x0000000100000f36</span> &lt;main+22&gt;:   mov    -0x4(<span style="color: #a0522d;">%rbp</span>),<span style="color: #a0522d;">%eax</span>
+<span style="color: #0000ff;">0x0000000100000f39</span> &lt;main+25&gt;:   pop    <span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x0000000100000f3a</span> &lt;main+26&gt;:   retq
+</pre>
+
+
+
+<pre class="src src-sh">$ ulimit -c unlimited
+</pre>
+
+
+
+<pre class="src src-c"><span style="color: #483d8b;">#include</span> <span style="color: #8b2252;">&lt;ruby/ruby.h&gt;</span>
+
+<span style="color: #228b22;">VALUE</span> <span style="color: #0000ff;">crash</span>(self)
+{
+  <span style="color: #228b22;">int</span> *<span style="color: #a0522d;">ptr</span> = <span style="color: #008b8b;">NULL</span>;
+  *ptr = 1;
+}
+
+<span style="color: #228b22;">void</span> <span style="color: #0000ff;">Init_example</span>(<span style="color: #228b22;">void</span>)
+{
+  <span style="color: #228b22;">VALUE</span> <span style="color: #a0522d;">klass</span> = rb_define_class(<span style="color: #8b2252;">"Example"</span>, rb_cObject);
+  rb_define_singleton_method(klass, <span style="color: #8b2252;">"crash"</span>, crash, 0);
+}
+</pre>
+
+
+
+<pre class="src src-ruby"><span style="color: #b22222;">#</span><span style="color: #b22222;">!/usr/bin/env ruby</span>
+
+require <span style="color: #8b2252;">'example'</span>
+
+<span style="color: #228b22;">Example</span>.crash
+</pre>
+
+
+
+<pre class="src src-sh">$ example
+/Users/abedra/.rvm/gems/ree-1.8.7-2012.02/gems/example-0.0.1/bin/example:5: [BUG] Segmentation fault
+ruby 1.8.7 (2012-02-08 MBARI 8/0x6770 on patchlevel 358) [i686-darwin11.4.2], MBARI 0x6770, Ruby Enterprise Edition 2012.02
+
+zsh: abort      example
+</pre>
+
+
+
+<pre class="src src-sh">$ gdb --args ruby -S example
+
+(gdb) run
+Starting program: /Users/abedra/.rvm/rubies/ree-1.8.7-2012.02/bin/ruby -S example
+Reading symbols for shared libraries .++............................ done
+Reading symbols for shared libraries . done
+
+Program received signal EXC_BAD_ACCESS, Could not access memory.
+Reason: KERN_INVALID_ADDRESS at address: 0x0000000000000000
+<span style="color: #0000ff;">crash</span> (<span style="color: #a0522d;">self</span>=35554624) at example.c:6
+6         *<span style="color: #a0522d;">ptr</span> = 1;
+</pre>
+
+
+
+<pre class="src src-fundamental">(gdb) bt
+#0  crash (self=35554624) at example.c:6
+#1  0x0000000100023fd4 in rb_call0 (klass=4330521880, recv=4330521920, id=15873, oid=15873, argc=0, argv=0x0, body=0x1021e84f0, flags=&lt;value temporarily unavailable, due to optimizations&gt;) at eval.c:6035
+#2  0x000000010002430c in rb_call (klass=4330521880, recv=4330521920, mid=15873, argc=0, argv=0x0, scope=0, self=4331734280) at eval.c:6283
+#3  0x000000010002e4eb in eval_call (self=4331734280, node=0x1021e8d88) at eval.c:3371
+#4  0x0000000100030d44 in rb_load (fname=4330524880, wrap=&lt;value temporarily unavailable, due to optimizations&gt;) at eval.c:7175
+#5  0x00000001000313f5 in rb_f_load (argc=&lt;value temporarily unavailable, due to optimizations&gt;, argv=&lt;value temporarily unavailable, due to optimizations&gt;) at eval.c:7243
+#6  0x0000000100023fd4 in rb_call0 (klass=4331744160, recv=4331734280, id=9801, oid=9801, argc=1, argv=0x7fff5fbfef90, body=0x1022f36d8, flags=&lt;value temporarily unavailable, due to optimizations&gt;) at eval.c:6035
+#7  0x000000010002430c in rb_call (klass=4331744160, recv=4331734280, mid=9801, argc=1, argv=0x7fff5fbfef90, scope=1, self=4331734280) at eval.c:6283
+#8  0x000000010002e22a in eval_fcall (self=4331734280, node=0x1022eeb60) at eval.c:3385
+#9  0x000000010003255b in ruby_exec_internal () at eval.c:1678
+#10 0x0000000100032598 in ruby_exec () at eval.c:1698
+#11 0x00000001000325c0 in ruby_run () at eval.c:1708
+#12 0x0000000100001104 in main (argc=&lt;value temporarily unavailable, due to optimizations&gt;, argv=&lt;value temporarily unavailable, due to optimizations&gt;, envp=&lt;value temporarily unavailable, due to optimizations&gt;) at main.c:48
+</pre>
+
+
+
+<pre class="src src-sh"><span style="color: #483d8b;">export</span> <span style="color: #a0522d;">optflags</span>=<span style="color: #8b2252;">"-O0 -ggdb3"</span>; rvm install ree
+</pre>
+
+
+
+<pre class="src src-fundamental">(gdb) bt
+#0  crash (self=35554624) at example.c:6
+#1  0x000000010002abe8 in call_cfunc (func=0x1001b2ea0 &lt;crash&gt;, recv=4330521920, len=0, argc=0, argv=0x0) at eval.c:5888
+#2  0x0000000100029de8 in rb_call0 (klass=4330521880, recv=4330521920, id=15873, oid=15873, argc=0, argv=0x0, body=0x1021e84f0, flags=0) at eval.c:6035
+#3  0x000000010002b6da in rb_call (klass=4330521880, recv=4330521920, mid=15873, argc=0, argv=0x0, scope=0, self=4331734280) at eval.c:6283
+#4  0x0000000100022732 in eval_call (self=4331734280, node=0x1021e8d88) at eval.c:3371
+#5  0x0000000100024d17 in rb_eval (self=4331734280, node=0x1021e8d88) at eval.c:4038
+#6  0x000000010001d88f in eval_tree (self=4331734280, node=0x1021e8d38) at eval.c:1472
+#7  0x000000010002da7f in rb_load (fname=4330524880, wrap=0) at eval.c:7175
+#8  0x000000010002ddc3 in rb_f_load (argc=1, argv=0x7fff5fbfecc0) at eval.c:7243
+#9  0x000000010002abd0 in call_cfunc (func=0x10002dd77 &lt;rb_f_load&gt;, recv=4331734280, len=-1, argc=1, argv=0x7fff5fbfecc0) at eval.c:5885
+#10 0x0000000100029de8 in rb_call0 (klass=4331744160, recv=4331734280, id=9801, oid=9801, argc=1, argv=0x7fff5fbfecc0, body=0x1022f36d8, flags=2) at eval.c:6035
+#11 0x000000010002b6da in rb_call (klass=4331744160, recv=4331734280, mid=9801, argc=1, argv=0x7fff5fbfecc0, scope=1, self=4331734280) at eval.c:6283
+#12 0x0000000100022a0f in eval_fcall (self=4331734280, node=0x1022eeb60) at eval.c:3385
+#13 0x0000000100024d2d in rb_eval (self=4331734280, node=0x1022eeb60) at eval.c:4042
+#14 0x000000010001d88f in eval_tree (self=4331734280, node=0x1022ef380) at eval.c:1472
+#15 0x000000010001dfbe in ruby_exec_internal () at eval.c:1678
+#16 0x000000010001e00e in ruby_exec () at eval.c:1698
+#17 0x000000010001e034 in ruby_run () at eval.c:1708
+#18 0x0000000100000e42 in main (argc=Could not find the frame base for <span style="color: #8b2252;">"main"</span>.) at main.c:48
+</pre>
+
+
+
+<pre class="src src-asm">(gdb) <span style="color: #a020f0;">disas</span> crash
+<span style="color: #0000ff;">Dump</span> <span style="color: #a020f0;">of</span> assembler code for function crash:
+<span style="color: #0000ff;">0x00000001001b2ea0</span> &lt;crash+0&gt;:   push   <span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x00000001001b2ea1</span> &lt;crash+1&gt;:   mov    <span style="color: #a0522d;">%rsp</span>,<span style="color: #a0522d;">%rbp</span>
+<span style="color: #0000ff;">0x00000001001b2ea4</span> &lt;crash+4&gt;:   movl   $0x1,0x0
+<span style="color: #0000ff;">0x00000001001b2eaf</span> &lt;crash+15&gt;:  leaveq
+<span style="color: #0000ff;">0x00000001001b2eb0</span> &lt;crash+16&gt;:  retq
+</pre>
+
+
+
+<pre class="src src-fundamental">(gdb) info frame
+Stack level 0, frame at 0x7fff5fbfe030:
+ rip = 0x1001b2ea4 in crash (example.c:6); saved rip 0x10002abe8
+ called by frame at 0x7fff5fbfe120
+ source language c.
+ Arglist at 0x7fff5fbfe028, args: self=35554664
+ Locals at 0x7fff5fbfe028, Previous frame's sp is 0x7fff5fbfe030
+ Saved registers:
+  rbp at 0x7fff5fbfe020, rip at 0x7fff5fbfe028
+(gdb) info symbol 0x1001b2ea4
+crash + 4 in section LC_SEGMENT.__TEXT.__text of /Users/abedra/.rvm/gems/ree-1.8.7-2012.02/gems/example-0.0.1/lib/example/example.bundle
+</pre>
+
+
+
+<pre class="src src-fundamental">$ example
+/Users/abedra/.rvm/gems/ree-1.8.7-2012.02/gems/example-0.0.1/bin/example:5: [BUG] Segmentation fault
+ruby 1.8.7 (2012-02-08 MBARI 8/0x6770 on patchlevel 358) [i686-darwin11.4.2], MBARI 0x6770, Ruby Enterprise Edition 2012.02
+
+zsh: abort (core dumped)  example
+$ gdb ruby /cores/core.68415
+
+Reading symbols for shared libraries . done
+Reading symbols for shared libraries ..................................... done
+#0  0x00007fff92eeb82a in __kill ()
+</pre>
+
+
+
+<pre class="src src-fundamental">(gdb) bt
+#0  0x00007fff92eeb82a in __kill ()
+#1  0x00007fff91ea4a9c in abort ()
+#2  0x000000010e8a9161 in rb_bug (fmt=Could not find the frame base for <span style="color: #8b2252;">"rb_bug"</span>.
+) at error.c:213
+#3  0x000000010e935a9a in sigsegv (sig=Could not find the frame base for <span style="color: #8b2252;">"sigsegv"</span>.
+) at signal.c:632
+#4  &lt;signal handler called&gt;
+#5  crash (self=262069744) at example.c:6
+
+.....
+</pre>
+
+
+
+<pre class="src src-fundamental">(gdb) frame 5
+#5  crash (self=262069744) at example.c:6
+6         *ptr = 1;
+</pre>
+
+</div>
+</div>
+</div>
+
+<div id="postamble">
+<p class="date">Date: 2012-10-23 10:26:01 CDT</p>
+<p class="author">Author: Aaron Bedra</p>
+<p class="creator">Org version 7.8.11 with Emacs version 24</p>
+<a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
+
+</div>
+</body>
+</html>
